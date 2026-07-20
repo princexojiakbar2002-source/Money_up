@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
@@ -408,6 +408,24 @@
   .stats-total-label{font-size:13px; color:var(--text-dim); font-weight:600; margin-bottom:6px;}
   .stats-total-amt{font-size:28px; font-weight:700; color:var(--text);}
   .stats-total-amt span{font-size:14px; color:var(--text-dim); font-weight:500;}
+
+  .pie-chart-wrap{
+    display:flex;
+    justify-content:center;
+    padding:8px 0 24px;
+  }
+  .pie-chart{
+    width:190px;
+    height:190px;
+    border-radius:50%;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.35), inset 0 0 0 6px var(--bg);
+  }
+  .stats-cat-dot{
+    width:11px;
+    height:11px;
+    border-radius:50%;
+    flex-shrink:0;
+  }
 
   .page{display:none;}
   .page.active{display:block;}
@@ -1309,21 +1327,38 @@ function renderStats(){
 
   const sorted = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
 
+  // Har toifaga rang beramiz (chiroyli, bir-biridan farqli palitra)
+  const PALETTE = ['#d4af6a','#6fb98f','#e2725b','#7ea9c9','#c98ec9','#e8cd94','#8fb3a3','#c97b5a','#9a8fc9','#b8d47a','#d4a9d4','#7ac9b8'];
+  const colorFor = (i) => PALETTE[i % PALETTE.length];
+
+  // Conic-gradient uchun segmentlarni hisoblaymiz
+  let cumulative = 0;
+  const gradientParts = sorted.map(([catId, amt], i) => {
+    const start = cumulative;
+    const pct = (amt/total)*100;
+    cumulative += pct;
+    return `${colorFor(i)} ${start}% ${cumulative}%`;
+  }).join(', ');
+
   let html = `
     <div class="stats-total-card">
       <div class="stats-total-label">Jami chiqim</div>
       <div class="stats-total-amt">${fmt(total)} <span>so'm</span></div>
     </div>
+
+    <div class="pie-chart-wrap">
+      <div class="pie-chart" style="background: conic-gradient(${gradientParts});"></div>
+    </div>
   `;
 
-  html += sorted.map(([catId, amt]) => {
+  html += sorted.map(([catId, amt], i) => {
     const cat = CAT_MAP[catId] || {name:'Boshqa', ic:'🧾'};
     const pct = Math.round((amt/total)*100);
     return `
       <div class="stats-cat-row">
+        <div class="stats-cat-dot" style="background:${colorFor(i)};"></div>
         <div class="tx-icon">${cat.ic}</div>
         <div class="stats-cat-name">${cat.name}</div>
-        <div class="stats-cat-bar-wrap"><div class="stats-cat-bar" style="width:${pct}%"></div></div>
         <div class="stats-cat-right">
           <div class="stats-cat-amt">${fmt(amt)}</div>
           <div class="stats-cat-pct">${pct}%</div>
@@ -1707,4 +1742,4 @@ initStorage();
 </script>
 
 </body>
-      </html>
+                                                                 </html>
