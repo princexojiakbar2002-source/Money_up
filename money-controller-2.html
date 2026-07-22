@@ -426,6 +426,35 @@
     flex-shrink:0;
   }
 
+  /* BUGUNGI KUN XULOSASI */
+  .today-summary-row{
+    display:flex;
+    gap:10px;
+  }
+  .today-summary-card{
+    flex:1;
+    background:var(--card);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:16px;
+    padding:14px 15px;
+  }
+  .today-summary-card .lbl{
+    font-size:12.5px;
+    color:var(--text-dim);
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    margin-bottom:6px;
+  }
+  .today-summary-card .val{
+    font-size:19px;
+    font-weight:700;
+    font-family:'Space Grotesk', sans-serif;
+  }
+  .today-summary-card.in .val{color:var(--green);}
+  .today-summary-card.out .val{color:var(--red);}
+
   .page{display:none;}
   .page.active{display:block;}
 
@@ -706,6 +735,22 @@
       <button id="statsPeriodMonthly" class="active" onclick="setStatsPeriodMode('monthly')">Oylik</button>
       <button id="statsPeriodH1" onclick="setStatsPeriodMode('h1')">1–15 kun</button>
       <button id="statsPeriodH2" onclick="setStatsPeriodMode('h2')">16–oy oxiri</button>
+    </div>
+
+    <div class="section-title" style="padding-top:6px;">
+      <h2>Bugungi kun</h2>
+    </div>
+    <div style="padding:0 20px;">
+      <div class="today-summary-row">
+        <div class="today-summary-card in">
+          <div class="lbl"><span class="arrow-up">↑</span> Kirim</div>
+          <div class="val" id="todayIncome">0</div>
+        </div>
+        <div class="today-summary-card out">
+          <div class="lbl"><span class="arrow-down">↓</span> Chiqim</div>
+          <div class="val" id="todayExpense">0</div>
+        </div>
+      </div>
     </div>
 
     <div class="section-title">
@@ -1314,6 +1359,26 @@ function setStatsPeriodMode(mode){
   renderStats();
 }
 
+// Kunlik kirim/chiqim dinamikasini chizadi (tanlangan davr ichida, har kun uchun ustun)
+// Bugungi kun uchun umumiy kirim va chiqim summasini hisoblaydi
+function renderTodaySummary(){
+  const now = new Date();
+  const dayStart = new Date(now); dayStart.setHours(0,0,0,0);
+  const dayEnd = new Date(now); dayEnd.setHours(23,59,59,999);
+
+  let income = 0, expense = 0;
+  transactions.forEach(t => {
+    const d = new Date(t.date);
+    if(d >= dayStart && d <= dayEnd){
+      if(t.type === 'income') income += t.amount;
+      else expense += t.amount;
+    }
+  });
+
+  document.getElementById('todayIncome').textContent = fmt(income);
+  document.getElementById('todayExpense').textContent = fmt(expense);
+}
+
 function renderStats(){
   const target = getMonthTarget();
   const label = target.toLocaleDateString('uz-UZ', {month:'long', year:'numeric'});
@@ -1322,6 +1387,8 @@ function renderStats(){
   // Tanlangan davr chegarasini shu ko'rilayotgan oy ichida hisoblaymiz
   const range = getPeriodRange(statsPeriodMode, target);
   document.getElementById('statsPeriodLabel').textContent = range.label;
+
+  renderTodaySummary();
 
   const monthTx = transactions.filter(t => {
     const d = new Date(t.date);
