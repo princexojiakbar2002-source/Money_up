@@ -426,90 +426,34 @@
     flex-shrink:0;
   }
 
-  /* KUNLIK DINAMIKA */
-  .dyn-legend{
+  /* BUGUNGI KUN XULOSASI */
+  .today-summary-row{
     display:flex;
-    gap:16px;
-    padding:0 20px 10px;
+    gap:10px;
   }
-  .dyn-legend-item{
-    display:flex;
-    align-items:center;
-    gap:6px;
+  .today-summary-card{
+    flex:1;
+    background:var(--card);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:16px;
+    padding:14px 15px;
+  }
+  .today-summary-card .lbl{
     font-size:12.5px;
     color:var(--text-dim);
     font-weight:600;
-  }
-  .dyn-legend-item .dot{
-    width:9px; height:9px; border-radius:50%; flex-shrink:0;
-  }
-  .dyn-chart-wrap{
-    padding:0 12px 22px;
-  }
-  .dyn-chart{
     display:flex;
-    align-items:stretch;
-    gap:3px;
-    height:150px;
-    overflow-x:auto;
-    padding:0 8px;
-    scrollbar-width:none;
-  }
-  .dyn-chart::-webkit-scrollbar{display:none;}
-  .dyn-col{
-    flex:1 0 14px;
-    min-width:14px;
-    display:flex;
-    flex-direction:column;
     align-items:center;
+    gap:5px;
+    margin-bottom:6px;
   }
-  .dyn-top{
-    flex:1;
-    display:flex;
-    align-items:flex-end;
-    width:100%;
-    justify-content:center;
+  .today-summary-card .val{
+    font-size:19px;
+    font-weight:700;
+    font-family:'Space Grotesk', sans-serif;
   }
-  .dyn-bottom{
-    flex:1;
-    display:flex;
-    align-items:flex-start;
-    width:100%;
-    justify-content:center;
-  }
-  .dyn-bar-in{
-    width:65%;
-    max-width:10px;
-    background:var(--green);
-    border-radius:3px 3px 0 0;
-    min-height:2px;
-  }
-  .dyn-bar-out{
-    width:65%;
-    max-width:10px;
-    background:var(--red);
-    border-radius:0 0 3px 3px;
-    min-height:2px;
-  }
-  .dyn-zero-line{
-    height:1px;
-    width:100%;
-    background:rgba(255,255,255,0.14);
-  }
-  .dyn-day-label{
-    font-size:9px;
-    color:var(--text-dim);
-    margin-top:6px;
-    text-align:center;
-  }
-  .dyn-empty{
-    flex:1;
-    align-self:center;
-    text-align:center;
-    color:var(--text-dim);
-    font-size:13px;
-    padding:24px 0;
-  }
+  .today-summary-card.in .val{color:var(--green);}
+  .today-summary-card.out .val{color:var(--red);}
 
   .page{display:none;}
   .page.active{display:block;}
@@ -794,14 +738,19 @@
     </div>
 
     <div class="section-title" style="padding-top:6px;">
-      <h2>Kunlik dinamika</h2>
+      <h2>Bugungi kun</h2>
     </div>
-    <div class="dyn-legend">
-      <span class="dyn-legend-item"><span class="dot" style="background:var(--green)"></span>Kirim</span>
-      <span class="dyn-legend-item"><span class="dot" style="background:var(--red)"></span>Chiqim</span>
-    </div>
-    <div class="dyn-chart-wrap">
-      <div class="dyn-chart" id="dynChart"></div>
+    <div style="padding:0 20px;">
+      <div class="today-summary-row">
+        <div class="today-summary-card in">
+          <div class="lbl"><span class="arrow-up">↑</span> Kirim</div>
+          <div class="val" id="todayIncome">0</div>
+        </div>
+        <div class="today-summary-card out">
+          <div class="lbl"><span class="arrow-down">↓</span> Chiqim</div>
+          <div class="val" id="todayExpense">0</div>
+        </div>
+      </div>
     </div>
 
     <div class="section-title">
@@ -1411,56 +1360,23 @@ function setStatsPeriodMode(mode){
 }
 
 // Kunlik kirim/chiqim dinamikasini chizadi (tanlangan davr ichida, har kun uchun ustun)
-function renderDailyDynamics(range){
-  const chartEl = document.getElementById('dynChart');
+// Bugungi kun uchun umumiy kirim va chiqim summasini hisoblaydi
+function renderTodaySummary(){
+  const now = new Date();
+  const dayStart = new Date(now); dayStart.setHours(0,0,0,0);
+  const dayEnd = new Date(now); dayEnd.setHours(23,59,59,999);
 
-  // Davr ichidagi har bir kun uchun sana ro'yxatini tuzamiz
-  const days = [];
-  const cursor = new Date(range.start);
-  cursor.setHours(0,0,0,0);
-  const endDay = new Date(range.end);
-  endDay.setHours(0,0,0,0);
-  while(cursor <= endDay){
-    days.push(new Date(cursor));
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  // Har kun uchun kirim va chiqim summasini hisoblaymiz
-  const dayTotals = days.map(day => {
-    const dayStart = new Date(day); dayStart.setHours(0,0,0,0);
-    const dayEnd = new Date(day); dayEnd.setHours(23,59,59,999);
-    let income = 0, expense = 0;
-    transactions.forEach(t => {
-      const d = new Date(t.date);
-      if(d >= dayStart && d <= dayEnd){
-        if(t.type === 'income') income += t.amount;
-        else expense += t.amount;
-      }
-    });
-    return { day: day.getDate(), income, expense };
+  let income = 0, expense = 0;
+  transactions.forEach(t => {
+    const d = new Date(t.date);
+    if(d >= dayStart && d <= dayEnd){
+      if(t.type === 'income') income += t.amount;
+      else expense += t.amount;
+    }
   });
 
-  const maxVal = Math.max(1, ...dayTotals.map(d => Math.max(d.income, d.expense)));
-  const hasAnyData = dayTotals.some(d => d.income > 0 || d.expense > 0);
-
-  if(!hasAnyData){
-    chartEl.innerHTML = `<div class="dyn-empty">Bu davrda hali amallar yo'q.</div>`;
-    return;
-  }
-
-  chartEl.innerHTML = dayTotals.map(d => {
-    const inPct = (d.income / maxVal) * 100;
-    const outPct = (d.expense / maxVal) * 100;
-    const showLabel = (d.day % 5 === 0) || d.day === days[0].getDate() || d.day === days[days.length-1].getDate();
-    return `
-      <div class="dyn-col">
-        <div class="dyn-top"><div class="dyn-bar-in" style="height:${inPct}%"></div></div>
-        <div class="dyn-zero-line"></div>
-        <div class="dyn-bottom"><div class="dyn-bar-out" style="height:${outPct}%"></div></div>
-        ${showLabel ? `<div class="dyn-day-label">${d.day}</div>` : ''}
-      </div>
-    `;
-  }).join('');
+  document.getElementById('todayIncome').textContent = fmt(income);
+  document.getElementById('todayExpense').textContent = fmt(expense);
 }
 
 function renderStats(){
@@ -1472,7 +1388,7 @@ function renderStats(){
   const range = getPeriodRange(statsPeriodMode, target);
   document.getElementById('statsPeriodLabel').textContent = range.label;
 
-  renderDailyDynamics(range);
+  renderTodaySummary();
 
   const monthTx = transactions.filter(t => {
     const d = new Date(t.date);
