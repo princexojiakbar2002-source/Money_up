@@ -2,14 +2,8 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Money Controller</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#241a12">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Money Controller">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
@@ -125,9 +119,8 @@
     padding:12px 14px;
     border:1px solid rgba(255,255,255,0.04);
     cursor:pointer;
-    transition:transform 0.15s ease, background 0.15s ease;
   }
-  .stat-pill:active{transform:scale(0.97); background:rgba(0,0,0,0.28);}
+  .stat-pill:active{transform:scale(0.97);}
   .stat-pill .lbl{font-size:11.5px; color:var(--text-dim); font-weight:600; display:flex; align-items:center; gap:5px; margin-bottom:4px;}
   .stat-pill .val{font-size:17px; font-weight:700;}
   .stat-pill.in .val{color:var(--green);}
@@ -206,10 +199,12 @@
   .tx-amount{font-size:15px; font-weight:700; white-space:nowrap;}
   .tx-amount.income{color:var(--green);}
   .tx-amount.expense{color:var(--red);}
-  .tx-del{
+  .tx-actions{display:flex; align-items:center; gap:2px; flex-shrink:0;}
+  .tx-del, .tx-edit-date{
     background:none;border:none;color:var(--text-dim);
-    font-size:18px; padding:4px 2px; line-height:1; opacity:0.5;
+    font-size:16px; padding:4px 5px; line-height:1; opacity:0.55;
   }
+  .tx-edit-date{font-size:15px;}
 
   .empty-state{
     text-align:center;
@@ -339,7 +334,7 @@
     padding:0 16px;
   }
   .amount-input-wrap span{color:var(--text-dim); font-weight:700; font-size:16px;}
-  input[type=text], input[type=number]{
+  input[type=text], input[type=number], input[type=date]{
     width:100%;
     background:none;
     border:none;
@@ -348,6 +343,7 @@
     padding:14px 16px;
     font-family:inherit;
     outline:none;
+    color-scheme: dark;
   }
   .amount-input-wrap input{padding-left:8px;}
   input.plain{
@@ -462,7 +458,6 @@
     border-radius:16px;
     padding:14px 15px;
     cursor:pointer;
-    transition:transform 0.15s ease;
   }
   .today-summary-card:active{transform:scale(0.97);}
   .today-summary-card .lbl{
@@ -752,11 +747,11 @@
         <div class="balance-label">Joriy balans</div>
         <div class="balance-num" id="balanceTotal">0 <span>so'm</span></div>
         <div class="balance-row">
-          <div class="stat-pill in" onclick="openBreakdownSheet('income')">
+          <div class="stat-pill in" onclick="openDetailPanel('income')">
             <div class="lbl"><span class="arrow-up">↑</span> Kirim</div>
             <div class="val num" id="incomeTotal">0</div>
           </div>
-          <div class="stat-pill out" onclick="openBreakdownSheet('expense')">
+          <div class="stat-pill out" onclick="openDetailPanel('expense')">
             <div class="lbl"><span class="arrow-down">↓</span> Chiqim</div>
             <div class="val num" id="expenseTotal">0</div>
           </div>
@@ -799,11 +794,11 @@
     </div>
     <div style="padding:0 20px;">
       <div class="today-summary-row">
-        <div class="today-summary-card in" onclick="openDayBreakdownSheet('income')">
+        <div class="today-summary-card in" onclick="openDetailPanel('income', true)">
           <div class="lbl"><span class="arrow-up">↑</span> Kirim</div>
           <div class="val" id="todayIncome">0</div>
         </div>
-        <div class="today-summary-card out" onclick="openDayBreakdownSheet('expense')">
+        <div class="today-summary-card out" onclick="openDetailPanel('expense', true)">
           <div class="lbl"><span class="arrow-down">↓</span> Chiqim</div>
           <div class="val" id="todayExpense">0</div>
         </div>
@@ -863,6 +858,29 @@
     <h3>Bildirishnomalar</h3>
     <div id="notifList"></div>
     <button class="notif-clear" onclick="clearNotifs()">Barchasini tozalash</button>
+  </div>
+</div>
+
+<!-- ===== KIRIM/CHIQIM TAFSILOTLARI OYNASI ===== -->
+<div class="sheet-overlay" id="detailPanelOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="detailPanelTitle">Kirim tafsilotlari</h3>
+    <div id="detailPanelList" style="max-height:60vh; overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-bottom:6px;"></div>
+    <button class="notif-clear" onclick="closeDetailPanel()">Yopish</button>
+  </div>
+</div>
+
+<!-- ===== SANANI TAHRIRLASH OYNASI ===== -->
+<div class="sheet-overlay" id="editDateOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>Sanani tahrirlash</h3>
+    <div class="field">
+      <label>Amal sanasi</label>
+      <input type="date" class="plain" id="editDateInput">
+    </div>
+    <button class="save-btn" onclick="saveEditedDate()">Saqlash</button>
   </div>
 </div>
 
@@ -926,7 +944,7 @@
 <div class="sheet-overlay" id="sheetOverlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <h3 id="sheetTitle">Yangi amal qo'shish</h3>
+    <h3 id="txSheetTitle">Yangi amal qo'shish</h3>
 
     <div class="type-toggle">
       <button id="toggleExpense" class="active expense" onclick="setType('expense')">Chiqim</button>
@@ -942,13 +960,13 @@
     </div>
 
     <div class="field">
-      <label>Sana</label>
-      <input type="date" class="plain" id="inputDate">
+      <label>Izoh (ixtiyoriy)</label>
+      <input type="text" class="plain" id="inputNote" placeholder="Masalan: Bozordan sabzavot" oninput="autoDetectCatFromNote()">
     </div>
 
     <div class="field">
-      <label>Izoh (ixtiyoriy)</label>
-      <input type="text" class="plain" id="inputNote" placeholder="Masalan: Bozordan sabzavot" oninput="autoDetectCatFromNote()">
+      <label>Sana</label>
+      <input type="date" class="plain" id="inputDate">
     </div>
 
     <div class="field">
@@ -956,24 +974,7 @@
       <div class="cat-grid" id="catGrid"></div>
     </div>
 
-    <button class="save-btn" id="sheetSaveBtn" onclick="saveTx()">Saqlash</button>
-  </div>
-</div>
-
-<!-- ===== KIRIM/CHIQIM TAFSILOTLARI OYNASI ===== -->
-<div class="sheet-overlay" id="breakdownSheetOverlay">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <h3 id="breakdownTitle">Tafsilotlar</h3>
-    <div class="stats-total-card">
-      <div class="stats-total-label" id="breakdownTotalLabel">Jami</div>
-      <div class="stats-total-amt" id="breakdownTotalAmt">0 <span>so'm</span></div>
-    </div>
-    <div id="breakdownByCat" style="margin-bottom:8px;"></div>
-    <div class="section-title" style="padding:14px 0 8px;">
-      <h2 style="font-size:14px;">Amallar ro'yxati</h2>
-    </div>
-    <div id="breakdownTxList" style="display:flex; flex-direction:column; gap:10px;"></div>
+    <button class="save-btn" onclick="saveTx()">Saqlash</button>
   </div>
 </div>
 
@@ -1009,13 +1010,13 @@ let notifications = []; // {id, category, period, pct, date, message}
 let currentType = 'expense';
 let selectedCat = null;
 let selectedCatIsManual = false; // foydalanuvchi toifani o'z qo'li bilan tanlaganmi
+let editingTxId = null; // tahrirlanayotgan tranzaksiya id (null bo'lsa - yangi qo'shish)
 let activeFilter = 'all';
 let statsMonthOffset = 0;
 let periodMode = 'monthly'; // limitlar sahifasidagi tanlangan davr
 let statsPeriodMode = 'monthly'; // statistika sahifasidagi tanlangan davr
 let budgetSelectedCat = null;
 let editingBudgetId = null;
-let editingTxId = null; // tahrirlanayotgan amal id-si (yangi qo'shishda null)
 const STORAGE_KEY = 'mc_transactions';
 const BUDGET_KEY = 'mc_budgets';
 const NOTIF_KEY = 'mc_notifications';
@@ -1146,20 +1147,18 @@ function showPage(name){
   if(name === 'budget') renderBudgets();
 }
 
-// Sana inputi uchun "YYYY-MM-DD" ko'rinishini mahalliy vaqt bo'yicha hosil qiladi
-// (toISOString ishlatilmaydi, chunki u UTC ga aylantirib, sanani bir kun orqaga
-// surib yuborishi mumkin)
-function toDateInputValue(d){
-  const yr = d.getFullYear();
-  const mo = String(d.getMonth()+1).padStart(2,'0');
-  const da = String(d.getDate()).padStart(2,'0');
-  return `${yr}-${mo}-${da}`;
+// Sanani input[type=date] uchun YYYY-MM-DD formatiga o'giradi
+function toDateInputValue(date){
+  const d = new Date(date);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 function openSheet(){
   editingTxId = null;
-  document.getElementById('sheetTitle').textContent = "Yangi amal qo'shish";
-  document.getElementById('sheetSaveBtn').textContent = "Saqlash";
+  document.getElementById('txSheetTitle').textContent = "Yangi amal qo'shish";
   setType('expense');
   document.getElementById('inputAmount').value = '';
   document.getElementById('inputNote').value = '';
@@ -1171,35 +1170,27 @@ function openSheet(){
   document.getElementById('sheetOverlay').classList.add('open');
 }
 
-// Mavjud amalni tahrirlash uchun oynani ochadi va maydonlarni to'ldiradi.
-// Shu orqali foydalanuvchi eski (masalan kechagi) sanani tanlab, o'sha kunga
-// yozishni unutgan rasxodini kiritishi mumkin.
-function openEditSheet(id){
-  const t = transactions.find(x => x.id === id);
-  if(!t) return;
+// Mavjud tranzaksiyani tahrirlash oynasida ochadi
+function editTx(id){
+  const tx = transactions.find(t => t.id === id);
+  if(!tx) return;
   editingTxId = id;
-  document.getElementById('sheetTitle').textContent = "Amalni tahrirlash";
-  document.getElementById('sheetSaveBtn').textContent = "O'zgarishni saqlash";
-
-  currentType = t.type;
-  document.getElementById('toggleExpense').classList.toggle('active', t.type==='expense');
-  document.getElementById('toggleIncome').classList.toggle('active', t.type==='income');
-
-  document.getElementById('inputAmount').value = t.amount;
-  document.getElementById('inputNote').value = t.note || '';
-  document.getElementById('inputDate').value = toDateInputValue(new Date(t.date));
-
-  selectedCat = t.category;
+  document.getElementById('txSheetTitle').textContent = "Amalni tahrirlash";
+  currentType = tx.type;
+  document.getElementById('toggleExpense').classList.toggle('active', tx.type==='expense');
+  document.getElementById('toggleIncome').classList.toggle('active', tx.type==='income');
+  document.getElementById('inputAmount').value = tx.amount;
+  document.getElementById('inputNote').value = tx.note || '';
+  document.getElementById('inputDate').value = toDateInputValue(tx.date);
+  selectedCat = tx.category;
   selectedCatIsManual = true;
   document.getElementById('autoDetectHint').style.display = 'none';
   renderCatGrid();
-
   document.getElementById('sheetOverlay').classList.add('open');
 }
 
 function closeSheet(){
   document.getElementById('sheetOverlay').classList.remove('open');
-  editingTxId = null;
 }
 document.getElementById('sheetOverlay').addEventListener('click', (e)=>{
   if(e.target.id === 'sheetOverlay') closeSheet();
@@ -1254,7 +1245,6 @@ async function saveTx(){
   const amountRaw = document.getElementById('inputAmount').value;
   const amount = parseFloat(amountRaw);
   const note = document.getElementById('inputNote').value.trim();
-  const dateVal = document.getElementById('inputDate').value; // "YYYY-MM-DD"
 
   if(!amount || amount <= 0){
     showToast("Summani kiriting");
@@ -1264,41 +1254,6 @@ async function saveTx(){
     showToast("Toifani tanlang");
     return;
   }
-  if(!dateVal){
-    showToast("Sanani tanlang");
-    return;
-  }
-
-  // Tanlangan sanaga, mavjud (yoki joriy) vaqtni qo'shib to'liq timestamp hosil qilamiz —
-  // shunda ro'yxatdagi tartib va vaqt ko'rsatkichi mantiqiy bo'lib qoladi
-  const timeSource = editingTxId
-    ? (transactions.find(x => x.id === editingTxId)?.date || new Date())
-    : new Date();
-  const timePart = new Date(timeSource).toTimeString().slice(0,8);
-  const fullDate = new Date(`${dateVal}T${timePart}`);
-  if(isNaN(fullDate.getTime())){
-    showToast("Sana noto'g'ri");
-    return;
-  }
-
-  if(editingTxId){
-    const t = transactions.find(x => x.id === editingTxId);
-    if(t){
-      t.type = currentType;
-      t.amount = amount;
-      t.category = selectedCat;
-      t.note = note;
-      t.date = fullDate.toISOString();
-    }
-    persist();
-    closeSheet();
-    renderAll();
-    showToast("O'zgarishlar saqlandi");
-    if(currentType === 'expense'){
-      await checkBudgetsForCategory(selectedCat);
-    }
-    return;
-  }
 
   const tx = {
     id: Date.now().toString(),
@@ -1306,7 +1261,7 @@ async function saveTx(){
     amount: amount,
     category: selectedCat,
     note: note,
-    date: fullDate.toISOString(),
+    date: new Date().toISOString(),
   };
   transactions.unshift(tx);
   persist();
@@ -1443,6 +1398,104 @@ async function deleteTx(id){
   showToast("O'chirildi");
 }
 
+/* ================= KIRIM/CHIQIM TAFSILOTLARI PANELI ================= */
+
+function openDetailPanel(type, dayOnly){
+  detailPanelState = { type, dayOnly: !!dayOnly };
+  let filtered = transactions.filter(t => t.type === type);
+  let titlePrefix = '';
+
+  if(dayOnly){
+    const target = new Date();
+    target.setDate(target.getDate() + statsDayOffset);
+    const dayStart = new Date(target); dayStart.setHours(0,0,0,0);
+    const dayEnd = new Date(target); dayEnd.setHours(23,59,59,999);
+    filtered = filtered.filter(t => {
+      const d = new Date(t.date);
+      return d >= dayStart && d <= dayEnd;
+    });
+    titlePrefix = document.getElementById('statsDayLabel').textContent + ' · ';
+  }
+
+  filtered = filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  document.getElementById('detailPanelTitle').textContent =
+    titlePrefix + (type === 'income' ? "Kirim tafsilotlari" : "Chiqim tafsilotlari");
+
+  const list = document.getElementById('detailPanelList');
+  if(filtered.length === 0){
+    list.innerHTML = `
+      <div class="empty-state" style="padding:30px 10px;">
+        <div class="ic">📭</div>
+        <p>Hali bu turdagi amallar yo'q.</p>
+      </div>`;
+  } else {
+    list.innerHTML = filtered.map(txRowHtml).join('');
+  }
+
+  document.getElementById('detailPanelOverlay').classList.add('open');
+}
+function closeDetailPanel(){
+  document.getElementById('detailPanelOverlay').classList.remove('open');
+}
+document.getElementById('detailPanelOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'detailPanelOverlay') closeDetailPanel();
+});
+
+/* ================= TRANZAKSIYA SANASINI TAHRIRLASH ================= */
+
+let editDateTxId = null;
+let detailPanelState = null; // { type, dayOnly } - tafsilot paneli qaysi holatda ochilganini eslab qoladi
+
+function openEditDate(id){
+  const t = transactions.find(x => x.id === id);
+  if(!t) return;
+  editDateTxId = id;
+
+  const d = new Date(t.date);
+  // <input type="date"> uchun YYYY-MM-DD formatida kerak
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  document.getElementById('editDateInput').value = `${yyyy}-${mm}-${dd}`;
+
+  document.getElementById('editDateOverlay').classList.add('open');
+}
+function closeEditDate(){
+  document.getElementById('editDateOverlay').classList.remove('open');
+  editDateTxId = null;
+}
+document.getElementById('editDateOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'editDateOverlay') closeEditDate();
+});
+
+async function saveEditedDate(){
+  if(!editDateTxId) return;
+  const newDateStr = document.getElementById('editDateInput').value;
+  if(!newDateStr){
+    showToast("Sanani tanlang");
+    return;
+  }
+
+  const t = transactions.find(x => x.id === editDateTxId);
+  if(!t) return;
+
+  // Eski vaqtni saqlab, faqat sanani almashtiramiz
+  const oldDate = new Date(t.date);
+  const [yyyy, mm, dd] = newDateStr.split('-').map(Number);
+  const newDate = new Date(yyyy, mm-1, dd, oldDate.getHours(), oldDate.getMinutes(), oldDate.getSeconds());
+  t.date = newDate.toISOString();
+
+  persist();
+  closeEditDate();
+  renderAll();
+  // Agar tafsilot paneli ochiq bo'lsa, uni ham yangilaymiz (avvalgi holatini saqlab)
+  if(document.getElementById('detailPanelOverlay').classList.contains('open') && detailPanelState){
+    openDetailPanel(detailPanelState.type, detailPanelState.dayOnly);
+  }
+  showToast("Sana yangilandi");
+}
+
 function renderChips(){
   const chips = [{id:'all', name:'Barchasi'}, {id:'income', name:'Kirim'}, {id:'expense', name:'Chiqim'}];
   document.getElementById('filterChips').innerHTML = chips.map(c => `
@@ -1453,6 +1506,28 @@ function setFilter(id){
   activeFilter = id;
   renderChips();
   renderTxList();
+}
+
+// Bitta tranzaksiya qatorini HTML sifatida yasaydi (bosh sahifa ro'yxati va tafsilot panelida ishlatiladi)
+function txRowHtml(t){
+  const cat = CAT_MAP[t.category] || {name:'Boshqa', ic:'🧾'};
+  const d = new Date(t.date);
+  const dateStr = d.toLocaleDateString('uz-UZ', {day:'numeric', month:'short'});
+  const timeStr = d.toLocaleTimeString('uz-UZ', {hour:'2-digit', minute:'2-digit'});
+  return `
+    <div class="tx">
+      <div class="tx-icon">${cat.ic}</div>
+      <div class="tx-body">
+        <div class="tx-title">${t.note ? t.note : cat.name}</div>
+        <div class="tx-meta">${cat.name} · ${dateStr}, ${timeStr}</div>
+      </div>
+      <div class="tx-amount ${t.type}">${t.type==='income' ? '+' : '−'}${fmt(t.amount)}</div>
+      <div class="tx-actions">
+        <button class="tx-edit-date" onclick="openEditDate('${t.id}')" title="Sanani tahrirlash">📅</button>
+        <button class="tx-del" onclick="deleteTx('${t.id}')">✕</button>
+      </div>
+    </div>
+  `;
 }
 
 function renderTxList(){
@@ -1471,23 +1546,7 @@ function renderTxList(){
     return;
   }
 
-  list.innerHTML = filtered.map(t => {
-    const cat = CAT_MAP[t.category] || {name:'Boshqa', ic:'🧾'};
-    const d = new Date(t.date);
-    const dateStr = d.toLocaleDateString('uz-UZ', {day:'numeric', month:'short'});
-    const timeStr = d.toLocaleTimeString('uz-UZ', {hour:'2-digit', minute:'2-digit'});
-    return `
-      <div class="tx" onclick="openEditSheet('${t.id}')" style="cursor:pointer;">
-        <div class="tx-icon">${cat.ic}</div>
-        <div class="tx-body">
-          <div class="tx-title">${t.note ? t.note : cat.name}</div>
-          <div class="tx-meta">${cat.name} · ${dateStr}, ${timeStr}</div>
-        </div>
-        <div class="tx-amount ${t.type}">${t.type==='income' ? '+' : '−'}${fmt(t.amount)}</div>
-        <button class="tx-del" onclick="event.stopPropagation(); deleteTx('${t.id}')">✕</button>
-      </div>
-    `;
-  }).join('');
+  list.innerHTML = filtered.map(txRowHtml).join('');
 }
 
 function renderSummary(){
@@ -1497,109 +1556,6 @@ function renderSummary(){
   document.getElementById('expenseTotal').textContent = fmt(expense);
   document.getElementById('balanceTotal').innerHTML = fmt(income-expense) + ' <span>so\'m</span>';
 }
-
-/* ================= KIRIM / CHIQIM TAFSILOTLARI ================= */
-// Bosh sahifadagi "Kirim"/"Chiqim" ustiga bosilganda barcha vaqt uchun,
-// Statistika sahifasidagi kunlik kartochkalarga bosilganda esa faqat
-// shu kun uchun tafsilotlarni ko'rsatadi: qaysi toifadan/qayerga necha pul
-// kelgan yoki ketgan, va har bir amalning to'liq ro'yxati.
-
-function openBreakdownSheet(type){
-  const list = transactions.filter(t => t.type === type);
-  renderBreakdownSheet(type, list, type === 'income' ? 'Barcha kirimlar' : 'Barcha chiqimlar');
-}
-
-function openDayBreakdownSheet(type){
-  const target = new Date();
-  target.setDate(target.getDate() + statsDayOffset);
-  const dayStart = new Date(target); dayStart.setHours(0,0,0,0);
-  const dayEnd = new Date(target); dayEnd.setHours(23,59,59,999);
-
-  const list = transactions.filter(t => {
-    if(t.type !== type) return false;
-    const d = new Date(t.date);
-    return d >= dayStart && d <= dayEnd;
-  });
-
-  let dayLabel;
-  if(statsDayOffset === 0) dayLabel = 'bugungi';
-  else if(statsDayOffset === -1) dayLabel = 'kechagi';
-  else dayLabel = target.toLocaleDateString('uz-UZ', {day:'numeric', month:'long'});
-
-  const title = type === 'income' ? `${dayLabel} kirimlar` : `${dayLabel} chiqimlar`;
-  renderBreakdownSheet(type, list, title.charAt(0).toUpperCase() + title.slice(1));
-}
-
-function renderBreakdownSheet(type, list, title){
-  document.getElementById('breakdownTitle').textContent = title;
-  document.getElementById('breakdownTotalLabel').textContent = type === 'income' ? 'Jami kirim' : 'Jami chiqim';
-
-  const total = list.reduce((s,t)=>s+t.amount, 0);
-  document.getElementById('breakdownTotalAmt').innerHTML = fmt(total) + ' <span>so\'m</span>';
-
-  // Toifa (manba) bo'yicha guruhlash — "pul qayerdan kelgan / nimaga ketgan"
-  const byCat = {};
-  list.forEach(t => { byCat[t.category] = (byCat[t.category] || 0) + t.amount; });
-  const sorted = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
-
-  const catBox = document.getElementById('breakdownByCat');
-  if(sorted.length === 0){
-    catBox.innerHTML = '';
-  } else {
-    catBox.innerHTML = sorted.map(([catId, amt]) => {
-      const cat = CAT_MAP[catId] || {name:'Boshqa', ic:'🧾'};
-      const pct = total > 0 ? Math.round((amt/total)*100) : 0;
-      return `
-        <div class="stats-cat-row">
-          <div class="tx-icon">${cat.ic}</div>
-          <div class="stats-cat-name">${cat.name}</div>
-          <div class="stats-cat-bar-wrap"><div class="stats-cat-bar" style="width:${pct}%;"></div></div>
-          <div class="stats-cat-right">
-            <div class="stats-cat-amt">${fmt(amt)}</div>
-            <div class="stats-cat-pct">${pct}%</div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  // To'liq amallar ro'yxati — sanasi bo'yicha kamayish tartibida, bosilganda tahrirlash oynasi ochiladi
-  const txBox = document.getElementById('breakdownTxList');
-  if(list.length === 0){
-    txBox.innerHTML = `
-      <div class="empty-state">
-        <div class="ic">📭</div>
-        <p>Bu davrda amallar yo'q.</p>
-      </div>`;
-  } else {
-    const sortedList = [...list].sort((a,b)=> new Date(b.date) - new Date(a.date));
-    txBox.innerHTML = sortedList.map(t => {
-      const cat = CAT_MAP[t.category] || {name:'Boshqa', ic:'🧾'};
-      const d = new Date(t.date);
-      const dateStr = d.toLocaleDateString('uz-UZ', {day:'numeric', month:'short'});
-      const timeStr = d.toLocaleTimeString('uz-UZ', {hour:'2-digit', minute:'2-digit'});
-      return `
-        <div class="tx" style="cursor:pointer;" onclick="closeBreakdownSheet(); openEditSheet('${t.id}')">
-          <div class="tx-icon">${cat.ic}</div>
-          <div class="tx-body">
-            <div class="tx-title">${t.note ? t.note : cat.name}</div>
-            <div class="tx-meta">${cat.name} · ${dateStr}, ${timeStr}</div>
-          </div>
-          <div class="tx-amount ${t.type}">${t.type==='income' ? '+' : '−'}${fmt(t.amount)}</div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  document.getElementById('breakdownSheetOverlay').classList.add('open');
-}
-
-function closeBreakdownSheet(){
-  document.getElementById('breakdownSheetOverlay').classList.remove('open');
-}
-document.getElementById('breakdownSheetOverlay').addEventListener('click', (e)=>{
-  if(e.target.id === 'breakdownSheetOverlay') closeBreakdownSheet();
-});
 
 function getMonthTarget(){
   const d = new Date();
