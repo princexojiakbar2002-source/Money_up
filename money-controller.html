@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Money Controller</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#241a12">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
@@ -426,6 +430,29 @@
   .stats-cat-right{display:flex; flex-direction:column; align-items:flex-end; width:78px; flex-shrink:0;}
   .stats-cat-right .stats-cat-amt{width:auto;}
   .stats-cat-pct{font-size:11.5px; font-weight:700; color:var(--gold-soft); margin-top:2px;}
+
+  .item-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 0;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  .item-row:last-child{border-bottom:none;}
+  .item-rank{
+    width:24px; height:24px;
+    border-radius:50%;
+    background:var(--bg-soft);
+    color:var(--text-dim);
+    font-size:11px;
+    font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .item-name{font-size:14px; font-weight:700; color:var(--text); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .item-count{font-size:11.5px; color:var(--text-dim); font-weight:600; margin-top:2px;}
+  .item-right{text-align:right; flex-shrink:0;}
+  .item-amt{font-size:14px; font-weight:700; color:var(--text); font-family:'Space Grotesk', sans-serif;}
 
   .stats-total-card{
     background: linear-gradient(155deg, var(--card-2) 0%, var(--card) 70%);
@@ -963,6 +990,11 @@
       <span class="sub" id="statsPeriodLabel"></span>
     </div>
     <div style="padding:0 20px;" id="statsBody"></div>
+
+    <div class="section-title">
+      <h2>Har bir narsaga sarflangan</h2>
+    </div>
+    <div style="padding:0 20px;" id="itemBreakdownBody"></div>
   </div>
 
   <!-- ===== LIMITLAR SAHIFASI ===== -->
@@ -1828,6 +1860,50 @@ function renderTodaySummary(){
   document.getElementById('statsDayNextBtn').disabled = (statsDayOffset >= 0);
 }
 
+// Har bir alohida xarajatni (izoh matniga qarab) guruhlab, necha marta va qancha
+// sarflanganini ko'rsatadi (masalan "Non" — 3 marta — 15 000 so'm)
+function renderItemBreakdown(monthTx){
+  const body = document.getElementById('itemBreakdownBody');
+  if(!body) return;
+
+  if(monthTx.length === 0){
+    body.innerHTML = `
+      <div class="empty-state">
+        <div class="ic">🧾</div>
+        <p>Bu davrda chiqimlar qayd etilmagan.</p>
+      </div>`;
+    return;
+  }
+
+  const groups = {};
+  monthTx.forEach(t => {
+    const cat = CAT_MAP[t.category] || {name:'Boshqa', ic:'🧾'};
+    // Izoh bo'lsa shu bo'yicha, bo'lmasa toifa nomi bo'yicha guruhlaymiz
+    const rawKey = (t.note && t.note.trim()) ? t.note.trim() : cat.name;
+    const key = rawKey.toLowerCase();
+    if(!groups[key]){
+      groups[key] = { label: rawKey, count: 0, total: 0 };
+    }
+    groups[key].count += 1;
+    groups[key].total += t.amount;
+  });
+
+  const sorted = Object.values(groups).sort((a,b) => b.total - a.total);
+
+  body.innerHTML = sorted.map((g, i) => `
+    <div class="item-row">
+      <div class="item-rank">${i+1}</div>
+      <div style="flex:1; min-width:0;">
+        <div class="item-name">${g.label}</div>
+        <div class="item-count">${g.count} marta</div>
+      </div>
+      <div class="item-right">
+        <div class="item-amt">${fmt(g.total)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
 function renderStats(){
   const target = getMonthTarget();
   const label = target.toLocaleDateString('uz-UZ', {month:'long', year:'numeric'});
@@ -1843,6 +1919,8 @@ function renderStats(){
     const d = new Date(t.date);
     return d >= range.start && d <= range.end && t.type === 'expense';
   });
+
+  renderItemBreakdown(monthTx);
 
   const byCat = {};
   monthTx.forEach(t => {
@@ -2523,6 +2601,13 @@ function renderDebtsPage(){
 }
 
 initStorage();
+
+// Service worker ro'yxatdan o'tkazish (PWA sifatida to'liq ishlashi uchun)
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
 </script>
 
 </body>
