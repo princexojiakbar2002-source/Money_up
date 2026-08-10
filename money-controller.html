@@ -49,6 +49,15 @@
     padding:28px 20px 18px;
     position:relative;
   }
+  .back-btn{
+    background:none;
+    border:none;
+    color:var(--gold-soft);
+    font-family:inherit;
+    font-weight:700;
+    font-size:14px;
+    padding:0;
+  }
   .brand{
     display:flex;
     align-items:center;
@@ -729,6 +738,111 @@
     font-size:13.5px;
     margin-top:4px;
   }
+
+  /* QARZLAR */
+  .debts-shortcut{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--card);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:16px;
+    padding:13px 14px;
+    cursor:pointer;
+  }
+  .debts-shortcut:active{transform:scale(0.98);}
+  .debts-shortcut-icon{
+    width:42px; height:42px;
+    border-radius:12px;
+    background:var(--bg-soft);
+    display:flex; align-items:center; justify-content:center;
+    font-size:19px;
+    flex-shrink:0;
+  }
+  .debts-shortcut-body{flex:1; min-width:0;}
+  .debts-shortcut-title{font-size:14.5px; font-weight:700; color:var(--text);}
+  .debts-shortcut-sub{font-size:12px; color:var(--text-dim); margin-top:2px;}
+  .debts-shortcut-arrow{font-size:20px; color:var(--text-dim);}
+
+  .debts-summary-row{
+    display:flex;
+    gap:10px;
+    padding-bottom:16px;
+  }
+  .debts-summary-card{
+    flex:1;
+    background:var(--card);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:16px;
+    padding:14px 15px;
+  }
+  .debts-summary-card .lbl{font-size:12px; color:var(--text-dim); font-weight:600; margin-bottom:6px;}
+  .debts-summary-card .val{font-size:19px; font-weight:700; font-family:'Space Grotesk', sans-serif;}
+  .debts-summary-card.owe .val{color:var(--red);}
+  .debts-summary-card.owed .val{color:var(--green);}
+
+  .debt-card{
+    background:var(--card);
+    border:1px solid rgba(255,255,255,0.05);
+    border-radius:16px;
+    padding:14px 15px;
+    margin-bottom:10px;
+  }
+  .debt-card-top{
+    display:flex;
+    align-items:flex-start;
+    gap:11px;
+    margin-bottom:10px;
+  }
+  .debt-card-icon{
+    width:40px; height:40px;
+    border-radius:12px;
+    background:var(--bg-soft);
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+    flex-shrink:0;
+  }
+  .debt-card-body{flex:1; min-width:0;}
+  .debt-card-person{font-size:14.5px; font-weight:700; color:var(--text);}
+  .debt-card-meta{font-size:12px; color:var(--text-dim); margin-top:2px;}
+  .debt-card-amount{font-size:16px; font-weight:700; font-family:'Space Grotesk', sans-serif; flex-shrink:0;}
+  .debt-card-amount.taken{color:var(--red);}
+  .debt-card-amount.given{color:var(--green);}
+  .debt-card-badge{
+    display:inline-block;
+    font-size:10.5px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:100px;
+    margin-top:5px;
+  }
+  .debt-card-badge.open{background:rgba(255,107,87,0.16); color:var(--red);}
+  .debt-card-badge.settled{background:rgba(79,209,165,0.16); color:var(--green);}
+  .debt-card-actions{
+    display:flex;
+    gap:8px;
+  }
+  .debt-settle-btn{
+    flex:1;
+    padding:9px;
+    border-radius:11px;
+    border:none;
+    background:var(--green);
+    color:#241a12;
+    font-family:inherit;
+    font-weight:700;
+    font-size:12.5px;
+  }
+  .debt-del-btn{
+    padding:9px 13px;
+    border-radius:11px;
+    border:1px solid rgba(255,255,255,0.08);
+    background:none;
+    color:var(--text-dim);
+    font-family:inherit;
+    font-weight:600;
+    font-size:12.5px;
+  }
 </style>
 </head>
 <body>
@@ -759,6 +873,17 @@
       </div>
     </header>
 
+    <div style="padding:0 20px 4px;">
+      <div class="debts-shortcut" onclick="showPage('debts')">
+        <div class="debts-shortcut-icon">🤝</div>
+        <div class="debts-shortcut-body">
+          <div class="debts-shortcut-title">Qarzlar</div>
+          <div class="debts-shortcut-sub" id="debtsShortcutSub">Ochiq qarzlar yo'q</div>
+        </div>
+        <div class="debts-shortcut-arrow">›</div>
+      </div>
+    </div>
+
     <div class="section-title">
       <h2>So'nggi amallar</h2>
       <span class="sub" id="txCount">0 ta</span>
@@ -767,7 +892,35 @@
     <div id="txList"></div>
   </div>
 
-  <!-- ===== STATISTIKA SAHIFASI ===== -->
+  <!-- ===== QARZLAR SAHIFASI ===== -->
+  <div class="page" id="page-debts">
+    <header>
+      <button class="back-btn" onclick="showPage('home')">‹ Orqaga</button>
+      <div class="brand" style="margin-top:14px;"><span class="dot"></span>QARZLAR</div>
+    </header>
+
+    <div style="padding:0 20px;">
+      <div class="debts-summary-row">
+        <div class="debts-summary-card owe">
+          <div class="lbl">Sizning qarzingiz</div>
+          <div class="val" id="debtsTotalOwe">0</div>
+        </div>
+        <div class="debts-summary-card owed">
+          <div class="lbl">Sizga qarzdorlar</div>
+          <div class="val" id="debtsTotalOwed">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chip-row" id="debtsFilterChips"></div>
+    <div style="padding:0 20px 10px;" id="debtsList"></div>
+
+    <div style="padding:4px 20px 20px;">
+      <button class="add-budget-btn" onclick="openAddDebtSheet()">+ Yangi qarz qo'shish</button>
+    </div>
+  </div>
+
+
   <div class="page" id="page-stats">
     <header>
       <div class="brand"><span class="dot"></span>STATISTIKA</div>
@@ -881,6 +1034,39 @@
       <input type="date" class="plain" id="editDateInput">
     </div>
     <button class="save-btn" onclick="saveEditedDate()">Saqlash</button>
+  </div>
+</div>
+
+<!-- ===== YANGI QARZ QO'SHISH OYNASI ===== -->
+<div class="sheet-overlay" id="addDebtOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>Yangi qarz qo'shish</h3>
+
+    <div class="type-toggle">
+      <button id="debtToggleTaken" class="active expense" onclick="setDebtType('taken')">Men oldim</button>
+      <button id="debtToggleGiven" class="income" onclick="setDebtType('given')">Men berdim</button>
+    </div>
+
+    <div class="field">
+      <label id="debtPersonLabel">Kimdan oldingiz</label>
+      <input type="text" class="plain" id="debtPersonInput" placeholder="Ism, masalan: Akmal aka">
+    </div>
+
+    <div class="field">
+      <label>Summa</label>
+      <div class="amount-input-wrap">
+        <input type="number" inputmode="numeric" id="debtAmountInput" placeholder="0">
+        <span>so'm</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Izoh (ixtiyoriy)</label>
+      <input type="text" class="plain" id="debtNoteInput" placeholder="Masalan: mashina uchun">
+    </div>
+
+    <button class="save-btn" onclick="saveDebt()">Saqlash</button>
   </div>
 </div>
 
@@ -1001,10 +1187,17 @@ const CATS_INCOME = [
   {id:'gift', name:"Sovg'a", ic:'🎁'},
   {id:'other_in', name:'Boshqa', ic:'💰'},
 ];
+// Qarz bilan bog'liq avtomatik yaratiladigan tranzaksiyalar uchun toifalar
+// (bular oddiy "+" oynasidagi toifa tanlashda ko'rinmaydi, faqat Qarzlar bo'limidan avtomatik qo'shiladi)
+const CATS_DEBT = [
+  {id:'debt_taken', name:"Qarz oldim", ic:'📥'},
+  {id:'debt_given', name:"Qarz berdim", ic:'📤'},
+];
 const CAT_MAP = {};
-[...CATS_EXPENSE, ...CATS_INCOME].forEach(c => CAT_MAP[c.id] = c);
+[...CATS_EXPENSE, ...CATS_INCOME, ...CATS_DEBT].forEach(c => CAT_MAP[c.id] = c);
 
 let transactions = [];
+let debts = []; // {id, type:'taken'|'given', person, amount, note, date, status:'open'|'settled', settledDate, linkedTxId}
 let budgets = [];       // {id, category, amount, period: 'monthly'|'h1'|'h2'}
 let notifications = []; // {id, category, period, pct, date, message}
 let currentType = 'expense';
@@ -1020,6 +1213,7 @@ let editingBudgetId = null;
 const STORAGE_KEY = 'mc_transactions';
 const BUDGET_KEY = 'mc_budgets';
 const NOTIF_KEY = 'mc_notifications';
+const DEBT_KEY = 'mc_debts';
 
 // Bu yerda ma'lumotlar telefon brauzerining o'z xotirasida (localStorage) saqlanadi.
 // Shuning uchun faylni qayerdan ochsangiz ham (Fayllar, Drive, va h.k.), bir xil
@@ -1044,8 +1238,23 @@ function initStorage(){
   }catch(e){
     notifications = [];
   }
+  try{
+    const raw4 = localStorage.getItem(DEBT_KEY);
+    debts = raw4 ? JSON.parse(raw4) : [];
+  }catch(e){
+    debts = [];
+  }
   renderAll();
   renderBellBadge();
+}
+
+function persistDebts(){
+  try{
+    localStorage.setItem(DEBT_KEY, JSON.stringify(debts));
+  }catch(e){
+    console.error('Qarzlarni saqlashda xato', e);
+    showToast("Saqlashda xatolik yuz berdi");
+  }
 }
 
 function persist(){
@@ -1142,9 +1351,12 @@ function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('nav-'+name).classList.add('active');
+  const navBtn = document.getElementById('nav-'+name);
+  if(navBtn) navBtn.classList.add('active');
   if(name === 'stats') renderStats();
   if(name === 'budget') renderBudgets();
+  if(name === 'debts') renderDebtsPage();
+  if(name === 'home') renderDebtsShortcut();
 }
 
 // Sanani input[type=date] uchun YYYY-MM-DD formatiga o'giradi
@@ -1731,6 +1943,7 @@ function renderAll(){
   renderSummary();
   renderChips();
   renderTxList();
+  renderDebtsShortcut();
 }
 
 /* ================= LIMITLAR (BUDGET) SAHIFASI ================= */
@@ -2094,6 +2307,220 @@ function closeVoiceOverlay(){
 document.getElementById('voiceOverlay').addEventListener('click', (e)=>{
   if(e.target.id === 'voiceOverlay') closeVoiceOverlay();
 });
+
+/* ================= QARZLAR ================= */
+
+let debtType = 'taken'; // 'taken' = men oldim, 'given' = men berdim
+let debtsActiveFilter = 'all'; // 'all' | 'taken' | 'given'
+
+function setDebtType(type){
+  debtType = type;
+  document.getElementById('debtToggleTaken').classList.toggle('active', type==='taken');
+  document.getElementById('debtToggleGiven').classList.toggle('active', type==='given');
+  document.getElementById('debtPersonLabel').textContent = type==='taken' ? 'Kimdan oldingiz' : 'Kimga berdingiz';
+}
+
+function openAddDebtSheet(){
+  debtType = 'taken';
+  document.getElementById('debtToggleTaken').classList.add('active');
+  document.getElementById('debtToggleGiven').classList.remove('active');
+  document.getElementById('debtPersonLabel').textContent = 'Kimdan oldingiz';
+  document.getElementById('debtPersonInput').value = '';
+  document.getElementById('debtAmountInput').value = '';
+  document.getElementById('debtNoteInput').value = '';
+  document.getElementById('addDebtOverlay').classList.add('open');
+}
+function closeAddDebtSheet(){
+  document.getElementById('addDebtOverlay').classList.remove('open');
+}
+document.getElementById('addDebtOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'addDebtOverlay') closeAddDebtSheet();
+});
+
+async function saveDebt(){
+  const person = document.getElementById('debtPersonInput').value.trim();
+  const amount = parseFloat(document.getElementById('debtAmountInput').value);
+  const note = document.getElementById('debtNoteInput').value.trim();
+
+  if(!person){
+    showToast("Ism kiriting");
+    return;
+  }
+  if(!amount || amount <= 0){
+    showToast("Summani kiriting");
+    return;
+  }
+
+  const debtId = Date.now().toString();
+  const now = new Date().toISOString();
+
+  // Qarz bilan bog'liq avtomatik "chiqim" tranzaksiyasini yaratamiz
+  // (qaytarilganda shu tranzaksiya o'chiriladi va chiqim o'z holiga qaytadi)
+  const txId = debtId + '_tx';
+  const catId = debtType === 'taken' ? 'debt_taken' : 'debt_given';
+  const catInfo = CAT_MAP[catId];
+  const txNote = debtType === 'taken'
+    ? `${person}dan qarz oldim${note ? ' — ' + note : ''}`
+    : `${person}ga qarz berdim${note ? ' — ' + note : ''}`;
+
+  transactions.unshift({
+    id: txId,
+    type: 'expense',
+    amount: amount,
+    category: catId,
+    note: txNote,
+    date: now,
+  });
+  persist();
+
+  debts.unshift({
+    id: debtId,
+    type: debtType,
+    person: person,
+    amount: amount,
+    note: note,
+    date: now,
+    status: 'open',
+    settledDate: null,
+    linkedTxId: txId,
+  });
+  persistDebts();
+
+  closeAddDebtSheet();
+  renderAll();
+  renderDebtsPage();
+  renderDebtsShortcut();
+  showToast("Qarz qo'shildi");
+}
+
+async function settleDebt(id){
+  const debt = debts.find(d => d.id === id);
+  if(!debt || debt.status === 'settled') return;
+
+  // Bog'langan chiqim tranzaksiyasini o'chiramiz — shu orqali chiqim o'z holiga qaytadi
+  transactions = transactions.filter(t => t.id !== debt.linkedTxId);
+  persist();
+
+  debt.status = 'settled';
+  debt.settledDate = new Date().toISOString();
+  persistDebts();
+
+  renderAll();
+  renderDebtsPage();
+  renderDebtsShortcut();
+  showToast("Qarz yopildi");
+}
+
+async function deleteDebt(id){
+  const debt = debts.find(d => d.id === id);
+  if(!debt) return;
+
+  // Agar hali yopilmagan bo'lsa, bog'langan chiqim tranzaksiyasini ham o'chiramiz
+  if(debt.status === 'open'){
+    transactions = transactions.filter(t => t.id !== debt.linkedTxId);
+    persist();
+  }
+
+  debts = debts.filter(d => d.id !== id);
+  persistDebts();
+
+  renderAll();
+  renderDebtsPage();
+  renderDebtsShortcut();
+  showToast("Qarz o'chirildi");
+}
+
+function setDebtsFilter(f){
+  debtsActiveFilter = f;
+  renderDebtsPage();
+}
+
+function renderDebtsShortcut(){
+  const openDebts = debts.filter(d => d.status === 'open');
+  const sub = document.getElementById('debtsShortcutSub');
+  if(!sub) return;
+  if(openDebts.length === 0){
+    sub.textContent = "Ochiq qarzlar yo'q";
+  } else {
+    sub.textContent = `${openDebts.length} ta ochiq qarz`;
+  }
+}
+
+function renderDebtsPage(){
+  const openDebts = debts.filter(d => d.status === 'open');
+  const totalOwe = openDebts.filter(d => d.type === 'taken').reduce((s,d)=>s+d.amount, 0);
+  const totalOwed = openDebts.filter(d => d.type === 'given').reduce((s,d)=>s+d.amount, 0);
+  document.getElementById('debtsTotalOwe').textContent = fmt(totalOwe);
+  document.getElementById('debtsTotalOwed').textContent = fmt(totalOwed);
+
+  // Filtr chip'lari
+  const chips = [
+    {id:'all', name:'Barchasi'},
+    {id:'taken', name:'Men oldim'},
+    {id:'given', name:'Men berdim'},
+  ];
+  document.getElementById('debtsFilterChips').innerHTML = chips.map(c => `
+    <div class="chip ${debtsActiveFilter===c.id ? 'active':''}" onclick="setDebtsFilter('${c.id}')">${c.name}</div>
+  `).join('');
+
+  let filtered = debts;
+  if(debtsActiveFilter !== 'all') filtered = debts.filter(d => d.type === debtsActiveFilter);
+  // Ochiqlarni birinchi, keyin sana bo'yicha
+  filtered = [...filtered].sort((a,b) => {
+    if(a.status !== b.status) return a.status === 'open' ? -1 : 1;
+    return new Date(b.date) - new Date(a.date);
+  });
+
+  const list = document.getElementById('debtsList');
+  if(filtered.length === 0){
+    list.innerHTML = `
+      <div class="empty-state" style="padding:36px 10px;">
+        <div class="ic">🤝</div>
+        <p>Hali qarzlar yo'q.<br>Pastdagi tugma orqali qo'shing.</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(d => {
+    const d1 = new Date(d.date);
+    const dateStr = d1.toLocaleDateString('uz-UZ', {day:'numeric', month:'short'});
+    const icon = d.type === 'taken' ? '📥' : '📤';
+    const typeLabel = d.type === 'taken' ? `${d.person}dan oldim` : `${d.person}ga berdim`;
+    const amountClass = d.type === 'taken' ? 'taken' : 'given';
+    const badge = d.status === 'open'
+      ? `<span class="debt-card-badge open">Ochiq</span>`
+      : `<span class="debt-card-badge settled">Yopilgan</span>`;
+
+    let actions = '';
+    if(d.status === 'open'){
+      actions = `
+        <div class="debt-card-actions">
+          <button class="debt-settle-btn" onclick="settleDebt('${d.id}')">✓ Qaytarildi</button>
+          <button class="debt-del-btn" onclick="deleteDebt('${d.id}')">✕</button>
+        </div>`;
+    } else {
+      actions = `
+        <div class="debt-card-actions">
+          <button class="debt-del-btn" onclick="deleteDebt('${d.id}')" style="flex:1;">O'chirish</button>
+        </div>`;
+    }
+
+    return `
+      <div class="debt-card">
+        <div class="debt-card-top">
+          <div class="debt-card-icon">${icon}</div>
+          <div class="debt-card-body">
+            <div class="debt-card-person">${typeLabel}</div>
+            <div class="debt-card-meta">${dateStr}${d.note ? ' · ' + d.note : ''}</div>
+            ${badge}
+          </div>
+          <div class="debt-card-amount ${amountClass}">${fmt(d.amount)}</div>
+        </div>
+        ${actions}
+      </div>
+    `;
+  }).join('');
+}
 
 initStorage();
 </script>
