@@ -870,6 +870,17 @@
     font-weight:600;
     font-size:12.5px;
   }
+  .plan-row{display:flex; align-items:center; gap:12px; background:var(--card); border-radius:16px; padding:12px 14px; margin-bottom:8px;}
+  .plan-check{width:26px; height:26px; border-radius:50%; border:2px solid var(--gold); background:none; color:var(--bg); font-size:14px; flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .plan-row.done .plan-check{background:var(--green); border-color:var(--green);}
+  .plan-row.done .plan-text{text-decoration:line-through; opacity:.55;}
+  .plan-body{flex:1; min-width:0;}
+  .plan-text{font-size:14.5px; font-weight:600; color:var(--text); word-break:break-word;}
+  .plan-amt{font-size:12px; color:var(--gold-soft); margin-top:2px;}
+  .plan-del{background:none; border:none; color:var(--text-dim); font-size:18px; cursor:pointer; padding:4px 8px;}
+  .plan-total{background:var(--card-2); border-radius:16px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
+  .plan-total .lbl{font-size:12px; color:var(--text-dim);}
+  .plan-total .val{font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; color:var(--gold);}
 </style>
 </head>
 <body>
@@ -901,6 +912,14 @@
     </header>
 
     <div style="padding:0 20px 4px;">
+      <div class="debts-shortcut" onclick="showPage('plans')" style="margin-bottom:10px;">
+        <div class="debts-shortcut-icon">📝</div>
+        <div class="debts-shortcut-body">
+          <div class="debts-shortcut-title">Rejalar</div>
+          <div class="debts-shortcut-sub" id="plansShortcutSub">Hozircha reja yo'q</div>
+        </div>
+        <div class="debts-shortcut-arrow">›</div>
+      </div>
       <div class="debts-shortcut" onclick="showPage('debts')">
         <div class="debts-shortcut-icon">🤝</div>
         <div class="debts-shortcut-body">
@@ -947,6 +966,21 @@
     </div>
   </div>
 
+
+  <div class="page" id="page-plans">
+    <header>
+      <button class="back-btn" onclick="showPage('home')">‹ Orqaga</button>
+      <div class="brand" style="margin-top:14px;"><span class="dot"></span>REJALAR</div>
+    </header>
+    <div style="padding:0 20px;">
+      <div class="plan-total"><div class="lbl">Rejalangan jami (oylikda eslatiladi)</div><div class="val" id="plansTotal">0</div></div>
+    </div>
+    <div class="chip-row" id="plansFilterChips"></div>
+    <div style="padding:0 20px 10px;" id="plansList"></div>
+    <div style="padding:4px 20px 20px;">
+      <button class="add-budget-btn" onclick="openAddPlanSheet()">+ Yangi reja qo'shish</button>
+    </div>
+  </div>
 
   <div class="page" id="page-stats">
     <header>
@@ -1070,6 +1104,39 @@
 </div>
 
 <!-- ===== YANGI QARZ QO'SHISH OYNASI ===== -->
+<div class="sheet-overlay" id="addPlanOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>Yangi reja</h3>
+    <div class="type-toggle">
+      <button id="planToggleBuy" class="active expense" onclick="setPlanType('buy')">🛒 Sotib olish</button>
+      <button id="planToggleTodo" class="income" onclick="setPlanType('todo')">✅ Qilish kerak</button>
+    </div>
+    <div class="field">
+      <label>Nima kerak?</label>
+      <input type="text" class="plain" id="planTextInput" placeholder="Masalan: yangi telefon / tish davolatish">
+    </div>
+    <div class="field">
+      <label>Taxminiy summa (ixtiyoriy)</label>
+      <div class="amount-input-wrap">
+        <input type="number" inputmode="numeric" id="planAmountInput" placeholder="0">
+        <span>so'm</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="savePlan()">Saqlash</button>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="salaryRemindOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>💰 Oylik keldi! Rejalaringiz:</h3>
+    <div id="salaryRemindList" style="max-height:45vh; overflow:auto; margin-bottom:12px;"></div>
+    <div class="plan-total"><div class="lbl">Taxminiy jami</div><div class="val" id="salaryRemindTotal">0</div></div>
+    <button class="save-btn" onclick="closeSalaryRemind(); showPage('plans')">Rejalarni ochish</button>
+  </div>
+</div>
+
 <div class="sheet-overlay" id="addDebtOverlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -1200,17 +1267,12 @@
 
 <script>
 const CATS_EXPENSE = [
-  {id:'food', name:'Oziq-ovqat', ic:'🍎'},
-  {id:'health', name:'Sog\'liq', ic:'💊'},
-  {id:'education', name:"Ta'lim", ic:'📚'},
-  {id:'fun', name:"Dam olish", ic:'🎉'},
-  {id:'shopping', name:'Xarid', ic:'🛍️'},
-  {id:'work_food', name:"Ishga borish va ovqat", ic:'🍽️'},
-  {id:'parents', name:"Ota-onam uchun", ic:'👴'},
-  {id:'family', name:"Oilam uchun", ic:'👨‍👩‍👧'},
-  {id:'relative_fund', name:"Qarindosh kassasi", ic:'🤝'},
-  {id:'phone_bill', name:"Telefon to'lovi", ic:'📱'},
-  {id:'emergency', name:"Zaxira (kutilmagan)", ic:'🛟'},
+  {id:'food', name:"Oziq-ovqat va bozor", ic:'🛒'},
+  {id:'transport', name:"Transport va avto", ic:'🚗'},
+  {id:'home', name:"Ro'zg'or va uy", ic:'🏠'},
+  {id:'care', name:"Kiyim va shaxsiy parvarish", ic:'👕'},
+  {id:'tech', name:"Aloqa va texnika", ic:'📱'},
+  {id:'fun', name:"Hordiq va sovg'alar", ic:'🎁'},
   {id:'other', name:'Boshqa', ic:'🧾'},
 ];
 const CATS_INCOME = [
@@ -1246,6 +1308,8 @@ const STORAGE_KEY = 'mc_transactions';
 const BUDGET_KEY = 'mc_budgets';
 const NOTIF_KEY = 'mc_notifications';
 const DEBT_KEY = 'mc_debts';
+const PLAN_KEY = 'mc_plans';
+let plans = []; // {id,type:'buy'|'todo',text,amount,done,date}
 
 // Bu yerda ma'lumotlar telefon brauzerining o'z xotirasida (localStorage) saqlanadi.
 // Shuning uchun faylni qayerdan ochsangiz ham (Fayllar, Drive, va h.k.), bir xil
@@ -1275,6 +1339,12 @@ function initStorage(){
     debts = raw4 ? JSON.parse(raw4) : [];
   }catch(e){
     debts = [];
+  }
+  try{
+    const raw5 = localStorage.getItem(PLAN_KEY);
+    plans = raw5 ? JSON.parse(raw5) : [];
+  }catch(e){
+    plans = [];
   }
   renderAll();
   renderBellBadge();
@@ -1388,7 +1458,8 @@ function showPage(name){
   if(name === 'stats') renderStats();
   if(name === 'budget') renderBudgets();
   if(name === 'debts') renderDebtsPage();
-  if(name === 'home') renderDebtsShortcut();
+  if(name === 'plans') renderPlansPage();
+  if(name === 'home'){ renderDebtsShortcut(); renderPlansShortcut(); }
 }
 
 // Sanani input[type=date] uchun YYYY-MM-DD formatiga o'giradi
@@ -1516,6 +1587,9 @@ async function saveTx(){
   if(currentType === 'expense'){
     await checkBudgetsForCategory(selectedCat);
   }
+  if(currentType === 'income' && tx.category === 'salary'){
+    openSalaryRemind();
+  }
 }
 
 // Limitlarni tekshirish: shu toifaga tegishli barcha faol limitlarni (oylik + joriy yarim oylik) ko'rib chiqadi
@@ -1614,7 +1688,7 @@ function renderNotifList(){
   list.innerHTML = notifications.map(n => {
     const d = new Date(n.date);
     const timeStr = d.toLocaleDateString('uz-UZ', {day:'numeric', month:'short'}) + ', ' + d.toLocaleTimeString('uz-UZ', {hour:'2-digit', minute:'2-digit'});
-    const ic = n.level === 'over' ? '🚨' : '⚠️';
+    const ic = n.level === 'plan' ? '📝' : (n.level === 'over' ? '🚨' : '⚠️');
     return `
       <div class="notif-item">
         <div class="ic">${ic}</div>
@@ -2022,6 +2096,7 @@ function renderAll(){
   renderChips();
   renderTxList();
   renderDebtsShortcut();
+  renderPlansShortcut();
 }
 
 /* ================= LIMITLAR (BUDGET) SAHIFASI ================= */
@@ -2599,6 +2674,112 @@ function renderDebtsPage(){
     `;
   }).join('');
 }
+
+
+// ===== REJALAR =====
+let planType = 'buy';
+let plansFilter = 'pending';
+function persistPlans(){
+  try{ localStorage.setItem(PLAN_KEY, JSON.stringify(plans)); }catch(e){}
+}
+function planEsc(t){
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function renderPlansShortcut(){
+  const sub = document.getElementById('plansShortcutSub');
+  if(!sub) return;
+  const n = plans.filter(p=>!p.done).length;
+  sub.textContent = n ? `${n} ta kutilayotgan reja` : "Hozircha reja yo'q";
+}
+function setPlanType(t){
+  planType = t;
+  document.getElementById('planToggleBuy').classList.toggle('active', t==='buy');
+  document.getElementById('planToggleTodo').classList.toggle('active', t==='todo');
+}
+function openAddPlanSheet(){
+  setPlanType('buy');
+  document.getElementById('planTextInput').value = '';
+  document.getElementById('planAmountInput').value = '';
+  document.getElementById('addPlanOverlay').classList.add('open');
+}
+function closeAddPlanSheet(){
+  document.getElementById('addPlanOverlay').classList.remove('open');
+}
+document.getElementById('addPlanOverlay').addEventListener('click', e=>{
+  if(e.target.id === 'addPlanOverlay') closeAddPlanSheet();
+});
+function savePlan(){
+  const text = document.getElementById('planTextInput').value.trim();
+  const amount = parseFloat(document.getElementById('planAmountInput').value) || 0;
+  if(!text){ showToast("Nima kerakligini yozing"); return; }
+  plans.unshift({id: Date.now().toString(), type: planType, text, amount, done:false, date: new Date().toISOString()});
+  persistPlans();
+  closeAddPlanSheet();
+  renderPlansPage();
+  renderPlansShortcut();
+  showToast("Reja qo'shildi");
+}
+function togglePlan(id){
+  const p = plans.find(x=>x.id===id);
+  if(!p) return;
+  p.done = !p.done;
+  persistPlans();
+  renderPlansPage();
+  renderPlansShortcut();
+}
+function deletePlan(id){
+  if(!confirm("Rejani o'chiraymi?")) return;
+  plans = plans.filter(x=>x.id!==id);
+  persistPlans();
+  renderPlansPage();
+  renderPlansShortcut();
+}
+function setPlansFilter(f){
+  plansFilter = f;
+  renderPlansPage();
+}
+function planRowHtml(p){
+  const icon = p.type === 'buy' ? '🛒' : '✅';
+  return `<div class="plan-row ${p.done?'done':''}">
+    <button class="plan-check" onclick="togglePlan('${p.id}')">${p.done?'✓':''}</button>
+    <div class="plan-body">
+      <div class="plan-text">${icon} ${planEsc(p.text)}</div>
+      ${p.amount ? `<div class="plan-amt">${fmt(p.amount)} so'm</div>` : ''}
+    </div>
+    <button class="plan-del" onclick="deletePlan('${p.id}')">✕</button>
+  </div>`;
+}
+function renderPlansPage(){
+  const pending = plans.filter(p=>!p.done);
+  document.getElementById('plansTotal').textContent = fmt(pending.reduce((s,p)=>s+(p.amount||0),0)) + " so'm";
+  const chips = [['pending','Kutilayotgan'],['buy','🛒 Olish'],['todo','✅ Qilish'],['done','Bajarilgan']];
+  document.getElementById('plansFilterChips').innerHTML = chips.map(([k,l])=>
+    `<button class="chip ${plansFilter===k?'active':''}" onclick="setPlansFilter('${k}')">${l}</button>`).join('');
+  let list = plans;
+  if(plansFilter === 'pending') list = pending;
+  else if(plansFilter === 'done') list = plans.filter(p=>p.done);
+  else list = pending.filter(p=>p.type===plansFilter);
+  document.getElementById('plansList').innerHTML = list.length
+    ? list.map(planRowHtml).join('')
+    : `<div class="empty-state">Bu yerda reja yo'q.<br>Esingizga tushganini yozib qo'ying.</div>`;
+}
+function openSalaryRemind(){
+  const pending = plans.filter(p=>!p.done);
+  if(!pending.length) return;
+  document.getElementById('salaryRemindList').innerHTML = pending.map(planRowHtml).join('');
+  document.getElementById('salaryRemindTotal').textContent = fmt(pending.reduce((s,p)=>s+(p.amount||0),0)) + " so'm";
+  document.getElementById('salaryRemindOverlay').classList.add('open');
+  try{
+    notifications.unshift({id: Date.now().toString()+'p', level:'plan', message: `💰 Oylik keldi! ${pending.length} ta rejangiz kutmoqda`, date: new Date().toISOString(), read:false});
+    persistNotifs(); renderBellBadge();
+  }catch(e){}
+}
+function closeSalaryRemind(){
+  document.getElementById('salaryRemindOverlay').classList.remove('open');
+}
+document.getElementById('salaryRemindOverlay').addEventListener('click', e=>{
+  if(e.target.id === 'salaryRemindOverlay') closeSalaryRemind();
+});
 
 initStorage();
 
